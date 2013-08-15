@@ -60,17 +60,11 @@ searchStats = (job, cb) ->
 fetchJob = (job, cb) ->
   job.fetch cb
 
-performSearch = (loggedIn, cb) ->
-  throw new Error 'login failed' unless loggedIn
+performSearch = (searchString) ->
+  (loggedIn, cb) ->
+    throw new Error 'login failed' unless loggedIn
 
-  searchString = """
-  search index=summary search_name=sub_flow_itier_boomerang_t_done_by_browser
-    earliest=-5m@m
-    latest=now
-  | stats avg(*_perc50) as *
-  """
-
-  splunk.search searchString, exec_mode: 'blocking', cb
+    splunk.search searchString, exec_mode: 'blocking', cb
 
 fetchResults = (job, cb) ->
   job.results {}, cb
@@ -83,10 +77,17 @@ splunk = new splunkjs.Service
   password:   options.password
   version:    options.version
 
+searchString = """
+search index=summary search_name=sub_flow_itier_boomerang_t_done_by_browser
+  earliest=-5m@m
+  latest=now
+| stats avg(*_perc50) as *
+"""
+
 async.waterfall [
 
   splunk.login
-  performSearch
+  performSearch searchString
   fetchJob
   searchStats
   fetchResults
