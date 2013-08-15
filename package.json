@@ -6,7 +6,8 @@
   "dependencies": {
     "async": "~0.2.9",
     "coffee-script-redux": "~2.0.0-beta6",
-    "splunk-sdk": "~1.1.0"
+    "splunk-sdk": "~1.1.0",
+    "cli-table": "~0.2.0"
   },
   "devDependencies": {},
   "scripts": {

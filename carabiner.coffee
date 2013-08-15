@@ -3,6 +3,7 @@ fs = require 'fs'
 
 async  = require 'async'
 splunkjs = require 'splunk-sdk'
+Table = require 'cli-table'
 
 readDefaults = (path) ->
   defaults = {}
@@ -95,6 +96,12 @@ async.waterfall [
     console.log err
     throw err
 
-  console.log results
+  if process.env.TABLE
+    {fields, rows} = results
+    table = new Table head: fields
+    table.push row for row in rows
+    console.log table.toString()
+  else
+    console.log results
 
 noErr = null
