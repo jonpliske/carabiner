@@ -1,0 +1,22 @@
+{
+  "name": "carabiner",
+  "version": "0.0.1",
+  "description": "tools for splunking",
+  "main": "carabiner.coffee",
+  "dependencies": {
+    "async": "~0.2.9",
+    "coffee-script-redux": "~2.0.0-beta6",
+    "splunk-sdk": "~1.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "keywords": [
+    "splunk"
+  ],
+  "author": "Jon Pliske <jonpliske@gmail.com>",
+  "license": "BSD",
+  "readmeFilename": "README"
+}
