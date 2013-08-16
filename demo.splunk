@@ -1,0 +1,1 @@
+search * | head 10000 | top sourcetype

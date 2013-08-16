@@ -92,7 +92,27 @@ module.exports = ->
     (loggedIn, cb) ->
       throw new Error 'login failed' unless loggedIn
 
-      splunk.search searchString, exec_mode: 'blocking', cb
+      splunk.search searchString, {}, cb
+
+  monitorSearch = (job, cb) ->
+    count = 0
+    jobUrl = options.scheme + '://' + options.host + ':' + options.port + job.qualifiedPath
+
+    console.log ''
+    console.log "-- search running: " + jobUrl
+
+    async.until (-> job.properties().isDone), ((done) ->
+      job.fetch (err) ->
+        done err if err?
+        newCount = job.properties().eventCount
+        if newCount > count
+          console.log "-- in progress, #{count} events"
+          count = newCount
+        done()
+    ), (err) ->
+      cb err if err?
+      console.log '-- search complete --'
+      cb noErr, job
 
   fetchResults = (job, cb) ->
     job.results {}, cb
@@ -110,6 +130,7 @@ module.exports = ->
     splunk.login
     performSearch options.query
     fetchJob
+    monitorSearch
     searchStats
     fetchResults
 
