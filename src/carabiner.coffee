@@ -88,6 +88,16 @@ module.exports = ->
   fetchJob = (job, cb) ->
     job.fetch cb
 
+  hookSignals = (job, cb) ->
+    process.on 'SIGINT', ->
+      console.log 'Recieved SIGINT: cancelling job'
+      job.cancel (err) ->
+        cb err if err?
+        console.log '-- search canceled --'
+        process.exit()
+
+    cb noErr, job
+
   performSearch = (searchString) ->
     (loggedIn, cb) ->
       throw new Error 'login failed' unless loggedIn
@@ -130,6 +140,7 @@ module.exports = ->
     splunk.login
     performSearch options.query
     fetchJob
+    hookSignals
     monitorSearch
     searchStats
     fetchResults
