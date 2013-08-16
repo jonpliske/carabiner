@@ -2,7 +2,7 @@
   "name": "carabiner",
   "version": "0.0.1",
   "description": "tools for splunking",
-  "main": "carabiner.coffee",
+  "main": "lib/carabiner.js",
   "dependencies": {
     "async": "~0.2.9",
     "coffee-script-redux": "~2.0.0-beta6",

@@ -6,3 +6,57 @@
  \____)_||_|_|   \_||_|____/|_|_| |_|\____)_|
 
   tools for splunking
+
+
+USAGE
+
+  1. Setup a ~/.splunkrc file:
+
+    host=localhost
+    port=8089
+    username=prince
+    password=sup
+    scheme=https
+    version=4.3.6     # your version of splunk
+
+
+  2. Depending on where your splunk is, this could be useful:
+
+      ssh -f -q prisim1.east -L 8089:prisim1.east:8089 -N
+
+
+  3. Write a query (include the `search` command) and toss it in a file:
+
+      search * | head 10000 | top sourcetype
+
+
+  4. ./bin/carabiner --table ./foo.splunk
+
+      ### JOB statistics
+      #
+      #    duration: 0.899s
+      #    eventCount: 1000
+      #    diskUsage: 124 KB
+      #    priority: 5
+      #
+      #    search:
+      #      search * | head 1000 | top sourcetype
+      #
+      ###
+
+
+      ┌───────────────────┬───────┬───────────┐
+      │ sourcetype        │ count │ percent   │
+      ├───────────────────┼───────┼───────────┤
+      │ banana-stand-node │ 605   │ 60.500000 │
+      ├───────────────────┼───────┼───────────┤
+      │ realestate-rails  │ 192   │ 19.200000 │
+      ├───────────────────┼───────┼───────────┤
+      │ stationary        │ 106   │ 10.600000 │
+      ├───────────────────┼───────┼───────────┤
+      │ lol-django        │ 84    │ 8.400000  │
+      ├───────────────────┼───────┼───────────┤
+      │ chi-rack          │ 10    │ 1.000000  │
+      ├───────────────────┼───────┼───────────┤
+      │ dont-touch        │ 3     │ 0.300000  │
+      └───────────────────┴───────┴───────────┘

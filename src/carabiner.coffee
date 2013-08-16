@@ -1,108 +1,129 @@
 path = require 'path'
 fs = require 'fs'
+util = require 'util'
 
 async  = require 'async'
 splunkjs = require 'splunk-sdk'
 Table = require 'cli-table'
 
-readDefaults = (path) ->
-  defaults = {}
-  lines = fs.readFileSync(path, 'utf8').split("\n")
+module.exports = ->
 
-  for line in lines
-    line = line.trim()
+  processArgs = (argv) ->
+    args = argv.slice(2)
+    options = {}
 
-    if line != "" and line[0] != '#'
-      parts = line.split '='
-      key = parts[0].trim()
-      val = parts[1].trim()
+    options.table = '--table' in args
 
-      defaults[key] = val
+    potentialFilename = args.slice(-1)[0]
+    if potentialFilename and fs.existsSync potentialFilename
+      options.query = fs.readFileSync(potentialFilename).toString()
 
-  defaults
+    options
 
-# grabs defaults from ~/.splunkrc
-defaults = ->
-  defaultsPath = path.join process.env.HOME, '.splunkrc'
-  if fs.existsSync defaultsPath
-    readDefaults defaultsPath
-  else
-    throw new Error 'no defaults'
+  readDefaults = (path) ->
+    defaults = {}
+    lines = fs.readFileSync(path, 'utf8').split("\n")
 
-options = defaults()
+    for line in lines
+      line = line.trim()
 
-## ---
-# search steps
+      if line != "" and line[0] != '#'
+        parts = line.split '='
+        key = parts[0].trim()
+        val = parts[1].trim()
 
-searchStats = (job, cb) ->
-  cb new Error 'no job' unless job?
+        defaults[key] = val
 
-  {eventCount, diskUsage, priority, runDuration, eventSearch} = job.properties()
+    defaults
 
-  # console.log job.properties()
+  # grabs defaults from ~/.splunkrc
+  defaults = ->
+    defaultsPath = path.join process.env.HOME, '.splunkrc'
+    if fs.existsSync defaultsPath
+      readDefaults defaultsPath
+    else
+      throw new Error 'no defaults'
 
-  console.log '\n'
-  console.log '### JOB statistics'
-  console.log '#'
-  console.log '#    duration: ' + runDuration + 's'
-  console.log '#    eventCount: ' + eventCount
-  console.log '#    diskUsage: ' + diskUsage / 1024 + ' KB'
-  console.log '#    priority: ' + priority
-  console.log '#'
-  console.log '#    search:'
-  console.log '#      ' + eventSearch
-  console.log '#'
-  console.log '###'
-  console.log '\n'
+  omit = (obj) ->
+    copy = {}
+    keys = Array::concat.apply Array.prototype, Array::slice.call(arguments, 1)
+    for key, val of obj
+      copy[key] = val unless key in keys
+    copy
 
-  cb noErr, job
+  args = processArgs process.argv
+  options = defaults()
+  options.table = args.table
+  options.query = args.query
 
-fetchJob = (job, cb) ->
-  job.fetch cb
+  ## ---
+  # search steps
 
-performSearch = (searchString) ->
-  (loggedIn, cb) ->
-    throw new Error 'login failed' unless loggedIn
+  searchStats = (job, cb) ->
+    cb new Error 'no job' unless job?
 
-    splunk.search searchString, exec_mode: 'blocking', cb
+    {eventCount, diskUsage, priority, runDuration, eventSearch} = job.properties()
 
-fetchResults = (job, cb) ->
-  job.results {}, cb
+    # console.log job.properties()
 
-splunk = new splunkjs.Service
-  scheme:     options.scheme
-  host:       options.host
-  port:       options.port
-  username:   options.username
-  password:   options.password
-  version:    options.version
+    console.log '\n'
+    console.log '### JOB statistics'
+    console.log '#'
+    console.log '#    duration: ' + runDuration + 's'
+    console.log '#    eventCount: ' + eventCount
+    console.log '#    diskUsage: ' + diskUsage / 1024 + ' KB'
+    console.log '#    priority: ' + priority
+    console.log '#'
+    console.log '#    search:'
+    console.log '#      ' + options.query
+    console.log '#'
+    # console.log '#    options:'
+    # console.log '#      ' + util.inspect omit options, 'password'
+    # console.log '#'
+    console.log '###'
+    console.log '\n'
 
-searchString = """
-search index=summary search_name=sub_flow_itier_boomerang_t_done_by_browser
-  earliest=-5m@m
-  latest=now
-| stats avg(*_perc50) as *
-"""
+    cb noErr, job
 
-async.waterfall [
+  fetchJob = (job, cb) ->
+    job.fetch cb
 
-  splunk.login
-  performSearch searchString
-  fetchJob
-  searchStats
-  fetchResults
+  performSearch = (searchString) ->
+    (loggedIn, cb) ->
+      throw new Error 'login failed' unless loggedIn
 
-], (err, results) ->
-  if err?
-    console.log err
-    throw err
+      splunk.search searchString, exec_mode: 'blocking', cb
 
-  if process.env.TABLE
-    {fields, rows} = results
-    table = new Table head: fields
-    table.push row for row in rows
-    console.log table.toString()
-  else
-    console.log results
+  fetchResults = (job, cb) ->
+    job.results {}, cb
 
-noErr = null
+  splunk = new splunkjs.Service
+    scheme:     options.scheme
+    host:       options.host
+    port:       options.port
+    username:   options.username
+    password:   options.password
+    version:    options.version
+
+  async.waterfall [
+
+    splunk.login
+    performSearch options.query
+    fetchJob
+    searchStats
+    fetchResults
+
+  ], (err, results) ->
+    if err?
+      console.log err
+      throw err
+
+    if options.table
+      {fields, rows} = results
+      table = new Table head: fields
+      table.push row for row in rows
+      console.log table.toString()
+    else
+      console.log results
+
+  noErr = null
