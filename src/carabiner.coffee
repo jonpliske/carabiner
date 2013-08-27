@@ -102,11 +102,20 @@ module.exports = ->
     (loggedIn, cb) ->
       throw new Error 'login failed' unless loggedIn
 
-      splunk.search searchString, {}, cb
+      searchOptions =
+        earliest_time: '-7h@h'
+        latest_time: '-1h@h'
+        status_buckets: 300
+
+      splunk.search searchString, searchOptions, cb
 
   monitorSearch = (job, cb) ->
     count = 0
     jobUrl = options.scheme + '://' + options.host + ':' + options.port + job.qualifiedPath
+
+    roundWithPrecision = (num, percision) ->
+      multiplier = Math.pow 10, percision
+      Math.round(num * multiplier) / multiplier
 
     console.log ''
     console.log "-- search running: " + jobUrl
@@ -114,10 +123,11 @@ module.exports = ->
     async.until (-> job.properties().isDone), ((done) ->
       job.fetch (err) ->
         done err if err?
-        newCount = job.properties().eventCount
-        if newCount > count
-          console.log "-- in progress, #{count} events"
-          count = newCount
+        {eventCount, doneProgress} = job.properties()
+        if eventCount > count
+          console.log "-- in progress, #{eventCount} events, #{roundWithPrecision(doneProgress * 100.0, 2)}% complete"
+          count = eventCount
+
         done()
     ), (err) ->
       cb err if err?
