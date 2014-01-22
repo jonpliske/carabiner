@@ -1,13 +1,13 @@
 {
   "name": "carabiner",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "tools for splunking",
   "main": "lib/carabiner.js",
   "dependencies": {
     "async": "~0.2.9",
-    "coffee-script-redux": "~2.0.0-beta6",
     "splunk-sdk": "~1.1.0",
-    "cli-table": "~0.2.0"
+    "cli-table": "~0.2.0",
+    "nopt": "~2.1.2"
   },
   "devDependencies": {},
   "scripts": {
