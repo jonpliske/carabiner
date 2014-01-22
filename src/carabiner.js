@@ -160,7 +160,7 @@ function carabiner() {
         cb(new Error('login failed'));
       }
 
-      var searchString = readQuery(args.argv.remain[0]),
+      var searchString = "search " + readQuery(args.argv.remain[0]),
           searchOptions = {
             status_buckets: 300,
             earliest_time: args.earliest,
