@@ -1,1 +1,3 @@
-search * | head 10000 | top sourcetype
+# carabiner ignores comment lines like this
+
+* | head 10000 | top sourcetype
